@@ -1,0 +1,37 @@
+{
+  "default": {
+    "borderColor": "#29a9ff",
+    "frontBg": "#1e1e1e",
+    "backBg": "#000"
+  },
+  "fire": {
+    "borderColor": "#ff4500",
+    "frontBg": "#330000",
+    "backBg": "#220000"
+  },
+  "ice": {
+    "borderColor": "#00d4ff",
+    "frontBg": "#001f33",
+    "backBg": "#000f1a"
+  },
+  "water": {
+    "borderColor": "#1e90ff",
+    "frontBg": "#001e3c",
+    "backBg": "#001025"
+  },
+  "thunder": {
+    "borderColor": "#ffd700",
+    "frontBg": "#1a1a2e",
+    "backBg": "#0f0f1b"
+  },
+  "shadow": {
+    "borderColor": "#5d3fd3",
+    "frontBg": "#0b0b0b",
+    "backBg": "#050505"
+  },
+  "nature": {
+    "borderColor": "#228B22",
+    "frontBg": "#1b3b1b",
+    "backBg": "#0f1f0f"
+  }
+}

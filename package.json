@@ -1,18 +1,42 @@
 {
   "name": "slaykenheroes",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "generate-island-index": "node scripts/generateIslandIndex.js",
+    "create-island": "node scripts/createNewIsland.js",
+    "list-islands": "node scripts/listIslands.js",
+    "generate-event-index": "node scripts/generateEventIndex.js",
+    "create-event": "node scripts/createNewEvent.js",
+    "list-events": "node scripts/listEvents.js"
   },
   "dependencies": {
-    "expo": "~53.0.6",
+    "@react-native-async-storage/async-storage": "2.1.2",
+    "@react-native-community/netinfo": "11.4.1",
+    "@react-native-community/slider": "4.5.6",
+    "@react-navigation/native": "^7.1.7",
+    "@react-navigation/native-stack": "^7.3.11",
+    "expo": "~53.0.5",
+    "expo-asset": "~11.1.4",
+    "expo-av": "~15.1.4",
+    "expo-constants": "~17.1.5",
+    "expo-file-system": "~18.1.8",
+    "expo-image": "~2.1.6",
+    "expo-splash-screen": "~0.30.8",
     "expo-status-bar": "~2.2.3",
+    "expo-store-review": "~8.1.5",
+    "expo-updates": "~0.28.12",
     "react": "19.0.0",
-    "react-native": "0.79.2"
+    "react-native": "0.79.2",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-reanimated": "~3.17.4",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "~4.10.0",
+    "updates": "^16.4.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

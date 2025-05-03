@@ -1,0 +1,70 @@
+{
+  "name": "Crystal Rush",
+  "description": "Verdiene mehr Crystals als üblich!",
+  "startDate": "01.05.2025, 13:00",
+  "endDate": "08.05.2025, 13:00",
+  "rewards": {
+    "exp": 300,
+    "coins": 300,
+    "crystals": 15
+  },
+  "fights": {
+    "1": {
+      "background": "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/plane/nightPlane.png",
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Dinoken",
+          "image": "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/animals/dinoken.png",
+          "maxHp": 300
+        },
+        {
+          "id": 2,
+          "name": "Leoken",
+          "image": "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/animals/leoken.png",
+          "maxHp": 300
+        },
+        {
+          "id": 3,
+          "name": "Bäraken",
+          "image": "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/animals/bäraken.png",
+          "maxHp": 300
+        }
+      ]
+    },
+    "2": {
+      "background": "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/plane/nightPlane.png",
+      "enemies": [
+        {
+          "id": 4,
+          "name": "Dinoken",
+          "image": "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/animals/dinoken.png",
+          "maxHp": 300
+        },
+        {
+          "id": 5,
+          "name": "Leoken",
+          "image": "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/animals/leoken.png",
+          "maxHp": 300
+        },
+        {
+          "id": 6,
+          "name": "Bäraken",
+          "image": "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/animals/bäraken.png",
+          "maxHp": 300
+        }
+      ]
+    },
+    "3": {
+      "background": "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/plane/nightPlane.png",
+      "enemies": [
+        {
+          "id": 7,
+          "name": "Dinoken",
+          "image": "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/animals/dinoken.png",
+          "maxHp": 300
+        }
+      ]
+    }
+  }
+}
