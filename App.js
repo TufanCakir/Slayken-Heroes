@@ -1,6 +1,5 @@
 import React, { useEffect, useCallback, useState, Suspense } from "react";
 import { StyleSheet, View, ActivityIndicator } from "react-native";
-import UpdateChecker from "./components/UpdateChecker";
 import { Asset } from "expo-asset";
 import * as FileSystem from "expo-file-system";
 import * as SplashScreen from "expo-splash-screen";
@@ -9,14 +8,11 @@ import { NavigationContainer } from "@react-navigation/native";
 import { GameProvider } from "./context/GameContext";
 import { useGame } from "./hooks/useGame";
 import { useMusicManager } from "./hooks/useMusicManager";
-import AppNavigator from "./navigation/AppNavigator";
-import OnlineGuard from "./components/OnlineGuard";
+import StartupUpdater from "./components/StartupUpdater";
 
 import enemyImages from "./data/enemies.json";
 import backgrounds from "./data/backgrounds.json";
 
-// Lazy loading für Komponenten
-const LazyUpdateChecker = React.lazy(() => import("./components/UpdateChecker"));
 const LazyAppNavigator = React.lazy(() => import("./navigation/AppNavigator"));
 const LazyOnlineGuard = React.lazy(() => import("./components/OnlineGuard"));
 
@@ -44,6 +40,7 @@ const downloadAndCacheImage = async (url) => {
 
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
+  const [appStep, setAppStep] = useState("startup"); // "startup" | "ready"
   const [cachedImages, setCachedImages] = useState({});
 
   useEffect(() => {
@@ -65,24 +62,33 @@ export default function App() {
           .map((bg) => bg.image)
           .filter((url) => typeof url === "string");
 
-        const criticalImageUrls = [...enemyImageUrls, ...backgroundUrls].slice(0, 10); // Lade nur die ersten 10 Bilder sofort
-        const nonCriticalImageUrls = [...enemyImageUrls, ...backgroundUrls].slice(10);
+        const criticalImageUrls = [...enemyImageUrls, ...backgroundUrls].slice(
+          0,
+          10
+        );
+        const nonCriticalImageUrls = [
+          ...enemyImageUrls,
+          ...backgroundUrls,
+        ].slice(10);
 
-        const criticalImageLoading = Promise.all(criticalImageUrls.map(downloadAndCacheImage));
+        const criticalImageLoading = Promise.all(
+          criticalImageUrls.map(downloadAndCacheImage)
+        );
 
         await Promise.all([...criticalAssets, criticalImageLoading]);
 
-        // Lade nicht-kritische Bilder im Hintergrund
         setTimeout(() => {
-          Promise.all(nonCriticalImageUrls.map(downloadAndCacheImage))
-            .then((cachedPaths) => {
+          Promise.all(nonCriticalImageUrls.map(downloadAndCacheImage)).then(
+            (cachedPaths) => {
               setCachedImages((prev) => ({
                 ...prev,
-                ...Object.fromEntries(nonCriticalImageUrls.map((url, i) => [url, cachedPaths[i]]))
+                ...Object.fromEntries(
+                  nonCriticalImageUrls.map((url, i) => [url, cachedPaths[i]])
+                ),
               }));
-            });
+            }
+          );
         }, 0);
-
       } catch (error) {
         console.warn("⚠️ Fehler beim Vorbereiten der App:", error);
       } finally {
@@ -99,6 +105,29 @@ export default function App() {
     }
   }, [appIsReady]);
 
+  const InnerApp = () => {
+    const { musicOn } = useGame();
+    useMusicManager(musicOn);
+
+    if (appStep === "startup") {
+      return <StartupUpdater onFinish={() => setAppStep("ready")} />;
+    }
+
+    if (appStep === "ready") {
+      return (
+        <Suspense fallback={<ActivityIndicator size="large" color="#003b5a" />}>
+          <LazyOnlineGuard>
+            <NavigationContainer>
+              <LazyAppNavigator />
+            </NavigationContainer>
+          </LazyOnlineGuard>
+        </Suspense>
+      );
+    }
+
+    return null;
+  };
+
   if (!appIsReady) {
     return (
       <View style={styles.splashContainer}>
@@ -111,7 +140,9 @@ export default function App() {
     <SafeAreaProvider>
       <SafeAreaView style={styles.container} onLayout={onLayoutRootView}>
         <GameProvider cachedImages={cachedImages}>
-          <Suspense fallback={<ActivityIndicator size="large" color="#003b5a" />}>
+          <Suspense
+            fallback={<ActivityIndicator size="large" color="#003b5a" />}
+          >
             <InnerApp />
           </Suspense>
         </GameProvider>
@@ -119,22 +150,6 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
-
-const InnerApp = React.memo(function InnerApp() {
-  const { musicOn } = useGame();
-  useMusicManager(musicOn);
-
-  return (
-    <Suspense fallback={<ActivityIndicator size="large" color="#003b5a" />}>
-      <LazyOnlineGuard>
-        <NavigationContainer>
-          <LazyAppNavigator />
-        </NavigationContainer>
-        <LazyUpdateChecker />
-      </LazyOnlineGuard>
-    </Suspense>
-  );
-});
 
 const styles = StyleSheet.create({
   container: {
