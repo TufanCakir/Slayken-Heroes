@@ -2,10 +2,12 @@
 
 import eventcoinRushData from './coinRush.json';
 import eventcrystalRushData from './crystalRush.json';
+import eventdinokenBurstData from './dinokenBurst.json';
 import eventexpRushData from './expRush.json';
 
 export const allEventData = {
   "coinRush": eventcoinRushData,
   "crystalRush": eventcrystalRushData,
+  "dinokenBurst": eventdinokenBurstData,
   "expRush": eventexpRushData,
 };

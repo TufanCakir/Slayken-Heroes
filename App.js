@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from "react";
+import React, { useEffect, useCallback, useState, Suspense } from "react";
 import { StyleSheet, View, ActivityIndicator } from "react-native";
 import UpdateChecker from "./components/UpdateChecker";
 import { Asset } from "expo-asset";
@@ -15,7 +15,32 @@ import OnlineGuard from "./components/OnlineGuard";
 import enemyImages from "./data/enemies.json";
 import backgrounds from "./data/backgrounds.json";
 
+// Lazy loading für Komponenten
+const LazyUpdateChecker = React.lazy(() => import("./components/UpdateChecker"));
+const LazyAppNavigator = React.lazy(() => import("./navigation/AppNavigator"));
+const LazyOnlineGuard = React.lazy(() => import("./components/OnlineGuard"));
+
 SplashScreen.preventAutoHideAsync();
+
+const downloadAndCacheImage = async (url) => {
+  try {
+    const filename = url.split("/").pop();
+    const localPath = `${FileSystem.cacheDirectory}${filename}`;
+    const info = await FileSystem.getInfoAsync(localPath);
+
+    if (!info.exists) {
+      await FileSystem.downloadAsync(url, localPath);
+      console.log("📥 Bild gespeichert:", filename);
+    } else {
+      console.log("✅ Bereits lokal:", filename);
+    }
+
+    return localPath;
+  } catch (err) {
+    console.warn("❌ Fehler beim Bild-Download:", url, err);
+    return url;
+  }
+};
 
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
@@ -24,50 +49,40 @@ export default function App() {
   useEffect(() => {
     async function prepare() {
       try {
-        const delay = new Promise((res) => setTimeout(res, 1000));
-
-        const dataLoading = Promise.all([
+        const criticalAssets = [
           import("./data/mapData.json"),
           import("./data/songs.json"),
           import("./data/enemies.json"),
           import("./data/attackZone.json"),
-        ]);
-
-        const assetLoading = Asset.loadAsync([
-          require("./assets/logoT.png"),
-          require("./assets/splash.png"),
-        ]);
-
-        // Lokale Cache-Funktion für Remote-Bilder
-        const downloadAndCacheImage = async (url) => {
-          try {
-            const filename = url.split("/").pop();
-            const localPath = `${FileSystem.cacheDirectory}${filename}`;
-            const info = await FileSystem.getInfoAsync(localPath);
-
-            if (!info.exists) {
-              await FileSystem.downloadAsync(url, localPath);
-              console.log("📥 Bild gespeichert:", filename);
-            } else {
-              console.log("✅ Bereits lokal:", filename);
-            }
-
-            return localPath;
-          } catch (err) {
-            console.warn("❌ Fehler beim Bild-Download:", url, err);
-            return url;
-          }
-        };
+          Asset.loadAsync([
+            require("./assets/logoT.png"),
+            require("./assets/splash.png"),
+          ]),
+        ];
 
         const enemyImageUrls = Object.values(enemyImages);
         const backgroundUrls = backgrounds
           .map((bg) => bg.image)
           .filter((url) => typeof url === "string");
 
-        const allRemoteUrls = [...enemyImageUrls, ...backgroundUrls];
-        await Promise.all(allRemoteUrls.map(downloadAndCacheImage));
+        const criticalImageUrls = [...enemyImageUrls, ...backgroundUrls].slice(0, 10); // Lade nur die ersten 10 Bilder sofort
+        const nonCriticalImageUrls = [...enemyImageUrls, ...backgroundUrls].slice(10);
 
-        await Promise.all([delay, dataLoading, assetLoading]);
+        const criticalImageLoading = Promise.all(criticalImageUrls.map(downloadAndCacheImage));
+
+        await Promise.all([...criticalAssets, criticalImageLoading]);
+
+        // Lade nicht-kritische Bilder im Hintergrund
+        setTimeout(() => {
+          Promise.all(nonCriticalImageUrls.map(downloadAndCacheImage))
+            .then((cachedPaths) => {
+              setCachedImages((prev) => ({
+                ...prev,
+                ...Object.fromEntries(nonCriticalImageUrls.map((url, i) => [url, cachedPaths[i]]))
+              }));
+            });
+        }, 0);
+
       } catch (error) {
         console.warn("⚠️ Fehler beim Vorbereiten der App:", error);
       } finally {
@@ -96,28 +111,30 @@ export default function App() {
     <SafeAreaProvider>
       <SafeAreaView style={styles.container} onLayout={onLayoutRootView}>
         <GameProvider cachedImages={cachedImages}>
-          <InnerApp />
+          <Suspense fallback={<ActivityIndicator size="large" color="#003b5a" />}>
+            <InnerApp />
+          </Suspense>
         </GameProvider>
       </SafeAreaView>
     </SafeAreaProvider>
   );
 }
 
-function InnerApp() {
+const InnerApp = React.memo(function InnerApp() {
   const { musicOn } = useGame();
   useMusicManager(musicOn);
 
   return (
-    <>
-      <OnlineGuard>
+    <Suspense fallback={<ActivityIndicator size="large" color="#003b5a" />}>
+      <LazyOnlineGuard>
         <NavigationContainer>
-          <AppNavigator />
+          <LazyAppNavigator />
         </NavigationContainer>
-        <UpdateChecker />
-      </OnlineGuard>
-    </>
+        <LazyUpdateChecker />
+      </LazyOnlineGuard>
+    </Suspense>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

@@ -39,6 +39,13 @@ const newsData = [
     image:
       "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/animals/euleken.png",
   },
+  {
+    id: "4",
+    title: "Neues Event gestartet Boss Rush!",
+    description: "Kämpfe gegen Mächtige Bosse!",
+    image:
+      "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/animals/leoken.png",
+  },
 ];
 
 export default function NewsScreen() {

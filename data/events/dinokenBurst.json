@@ -1,0 +1,24 @@
+{
+  "name": "Dinoken Burst",
+  "description": "Kämpfe gegen Mächtige Bosse!",
+  "startDate": "01.05.2025, 13:00",
+  "endDate": "08.05.2025, 13:00",
+  "rewards": {
+    "exp": 500,
+    "coins": 500,
+    "crystals": 50
+  },
+  "fights": {
+    "1": {
+      "background": "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/plane/grassPlane.png?v=2",
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Dinoken",
+          "image": "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/animals/dinoken.png",
+          "maxHp": 3000
+        }
+      ]
+    }
+  }
+}

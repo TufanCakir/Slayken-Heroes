@@ -1,4 +1,10 @@
-import React, { useMemo, useState, useRef, useEffect } from "react";
+import React, {
+  useMemo,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
 import {
   SafeAreaView,
   Text,
@@ -14,10 +20,19 @@ import { Image as ExpoImage, ImageBackground } from "expo-image";
 import { useNavigation } from "@react-navigation/native";
 import enemyImages from "../data/enemies.json";
 
-const backgroundImageUrl =
+const BACKGROUND_IMAGE_URL =
   "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/images/images.png";
 
-async function getCachedImage(uri) {
+// Statisch importierte JSON-Daten
+import backgrounds from "../data/backgrounds.json";
+import mapData from "../data/mapData.json";
+import songs from "../data/songs.json";
+import enemies from "../data/enemies.json";
+import attackZone from "../data/attackZone.json";
+
+const dataModules = { backgrounds, mapData, songs, enemies, attackZone };
+
+const getCachedImage = async (uri) => {
   const filename = uri.split("/").pop();
   const path = `${FileSystem.cacheDirectory}${filename}`;
   const info = await FileSystem.getInfoAsync(path);
@@ -26,22 +41,21 @@ async function getCachedImage(uri) {
       await FileSystem.downloadAsync(uri, path);
       return path;
     } catch (err) {
-      console.warn("❌ Fehler beim Caching:", uri);
+      console.warn("❌ Fehler beim Caching:", uri, err);
       return uri;
     }
   }
   return path;
-}
+};
 
-const animateProgress = (progressRef, toValue) => {
-  return new Promise((resolve) => {
+const animateProgress = (progressRef, toValue) =>
+  new Promise((resolve) => {
     Animated.timing(progressRef, {
       toValue,
       duration: 300,
       useNativeDriver: false,
-    }).start(() => resolve());
+    }).start(resolve);
   });
-};
 
 export default function StartScreen() {
   const navigation = useNavigation();
@@ -50,48 +64,49 @@ export default function StartScreen() {
   const [cachedEnemyImage, setCachedEnemyImage] = useState(null);
   const [cachedBackground, setCachedBackground] = useState(null);
 
+  // Zufälliges Gegnerbild
   const randomEnemyImage = useMemo(() => {
     const values = Object.values(enemyImages);
-    const index = Math.floor(Math.random() * values.length);
-    return values[index];
+    return values[Math.floor(Math.random() * values.length)];
   }, []);
 
   useEffect(() => {
-    getCachedImage(randomEnemyImage).then(setCachedEnemyImage);
-    getCachedImage(backgroundImageUrl).then(setCachedBackground);
+    (async () => {
+      const [enemyImage, backgroundImage] = await Promise.all([
+        getCachedImage(randomEnemyImage),
+        getCachedImage(BACKGROUND_IMAGE_URL),
+      ]);
+      setCachedEnemyImage(enemyImage);
+      setCachedBackground(backgroundImage);
+    })();
   }, [randomEnemyImage]);
 
-  const handlePress = async () => {
+  const handlePress = useCallback(async () => {
     if (loading) return;
     setLoading(true);
 
+    const moduleKeys = Object.keys(dataModules);
     try {
-      await animateProgress(progress, 0.2);
-      await import("../data/backgrounds.json");
-
-      await animateProgress(progress, 0.4);
-      await import("../data/mapData.json");
-
-      await animateProgress(progress, 0.6);
-      await import("../data/songs.json");
-
-      await animateProgress(progress, 0.8);
-      await import("../data/enemies.json");
-
-      await animateProgress(progress, 1.0);
-      await import("../data/attackZone.json");
-
+      for (let i = 0; i < moduleKeys.length; i++) {
+        const key = moduleKeys[i];
+        await animateProgress(progress, (i + 1) / moduleKeys.length);
+        const data = dataModules[key];
+        // Optional: Verwende die Daten, um z.B. globalen State zu initialisieren
+        console.log(`Loaded module: ${key}`, data);
+      }
       navigation.replace("HomeScreen");
     } catch (error) {
       console.error("Fehler beim Vorladen:", error);
+      setLoading(false);
     }
-  };
+  }, [loading, navigation, progress]);
 
   const appVersion = Constants.expoConfig?.version ?? "1.0.0";
   const buildNumber =
-    Platform.OS === "ios"
-      ? Constants.expoConfig?.ios?.buildNumber ?? "1"
-      : Constants.expoConfig?.android?.versionCode?.toString() ?? "1";
+    Platform.select({
+      ios: Constants.expoConfig?.ios?.buildNumber ?? "1",
+      android: Constants.expoConfig?.android?.versionCode?.toString() ?? "1",
+    }) || "1";
 
   const progressWidth = progress.interpolate({
     inputRange: [0, 1],
@@ -102,7 +117,7 @@ export default function StartScreen() {
     <TouchableWithoutFeedback onPress={handlePress}>
       <View style={styles.background}>
         <ImageBackground
-          source={{ uri: cachedBackground || backgroundImageUrl }}
+          source={{ uri: cachedBackground || BACKGROUND_IMAGE_URL }}
           style={styles.background}
           contentFit="cover"
           transition={1000}
