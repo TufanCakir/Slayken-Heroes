@@ -2,36 +2,55 @@
   "default": {
     "borderColor": "#29a9ff",
     "frontBg": "#1e1e1e",
-    "backBg": "#000"
+    "backBg": "#000",
+    "textColor": "#ffffff"
   },
   "fire": {
     "borderColor": "#ff4500",
     "frontBg": "#330000",
-    "backBg": "#220000"
+    "backBg": "#220000",
+    "textColor": "#ffffff"
   },
   "ice": {
     "borderColor": "#00d4ff",
     "frontBg": "#001f33",
-    "backBg": "#000f1a"
+    "backBg": "#000f1a",
+    "textColor": "#ffffff"
   },
   "water": {
     "borderColor": "#1e90ff",
     "frontBg": "#001e3c",
-    "backBg": "#001025"
+    "backBg": "#001025",
+    "textColor": "#ffffff"
   },
   "thunder": {
     "borderColor": "#ffd700",
     "frontBg": "#1a1a2e",
-    "backBg": "#0f0f1b"
+    "backBg": "#0f0f1b",
+    "textColor": "#ffffff"
   },
   "shadow": {
     "borderColor": "#5d3fd3",
     "frontBg": "#0b0b0b",
-    "backBg": "#050505"
+    "backBg": "#050505",
+    "textColor": "#ffffff"
   },
   "nature": {
     "borderColor": "#228B22",
     "frontBg": "#1b3b1b",
-    "backBg": "#0f1f0f"
+    "backBg": "#0f1f0f",
+    "textColor": "#ffffff"
+  },
+  "divine": {
+    "borderColor": "#fff59d",
+    "frontBg": "#fffde7",
+    "backBg": "#fff9c4",
+    "textColor": "#000000"
+  },
+  "demonic": {
+    "borderColor": "#8b0000",
+    "frontBg": "#2b0000",
+    "backBg": "#3b0000",
+    "textColor": "#ffffff"
   }
 }

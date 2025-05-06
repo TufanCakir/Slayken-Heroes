@@ -10,6 +10,7 @@ export default function StaticCard({
   height = 140,
 }) {
   const scheme = CARD_THEMES[variant] || CARD_THEMES.default;
+  const textColor = scheme.textColor || "#fff"; // fallback für alte Themes
 
   return (
     <View
@@ -23,7 +24,9 @@ export default function StaticCard({
         },
       ]}
     >
-      <Text style={styles.text}>{label || variant}</Text>
+      <Text style={[styles.text, { color: textColor }]}>
+        {label || variant}
+      </Text>
     </View>
   );
 }
@@ -48,9 +51,9 @@ const styles = StyleSheet.create({
     }),
   },
   text: {
-    color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
+    textTransform: "capitalize",
   },
 });

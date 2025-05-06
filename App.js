@@ -10,6 +10,7 @@ import { GameProvider } from "./context/GameContext";
 import { useGame } from "./hooks/useGame";
 import { useMusicManager } from "./hooks/useMusicManager";
 import AppNavigator from "./navigation/AppNavigator";
+import OnlineGuard from "./components/OnlineGuard";
 
 import enemyImages from "./data/enemies.json";
 import backgrounds from "./data/backgrounds.json";
@@ -108,10 +109,12 @@ function InnerApp() {
 
   return (
     <>
-      <NavigationContainer>
-        <AppNavigator />
-      </NavigationContainer>
-      <UpdateChecker />
+      <OnlineGuard>
+        <NavigationContainer>
+          <AppNavigator />
+        </NavigationContainer>
+        <UpdateChecker />
+      </OnlineGuard>
     </>
   );
 }

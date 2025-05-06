@@ -10,6 +10,8 @@ const VARIANT_RANGES = {
   shadow: { min: 100, max: 100 },
   water: { min: 100, max: 100 },
   natur: { min: 5, max: 10 },
+  divine: { min: 100, max: 100 },
+  demonic: { min: 100, max: 100 },
 };
 
 export function useBattle(
@@ -248,6 +250,8 @@ function schemeColor(variant) {
     shadow: "#5d3fd3",
     water: "#1e90ff",
     nature: "#228B22",
+    divine: "#fff59d",
+    demonic: "#8b0000",
     default: "#29a9ff",
   };
   return colors[variant] || colors.default;

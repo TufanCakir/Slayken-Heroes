@@ -5,21 +5,13 @@ import {
   Animated,
   TouchableWithoutFeedback,
   Platform,
+  Text,
 } from "react-native";
 
-/**
- * FlipCard zeigt eine Karte, die bei Tap umklappt und Vorder-/Rückseite wechselt.
- * Props:
- * - frontContent: React-Node für Vorderseite
- * - backContent: React-Node für Rückseite
- * - variant: "fire", "ice", "water", "thunder", "shadow" oder "default" für Farbschema
- * - width, height: Kartengröße
- * - duration: Animationsdauer in ms (nur für Timing-API)
- * - onFlipComplete: Callback(layout) nach Abschluss des Flip zur Rückseite; liefert absolute Position
- */
 export default function FlipCard({
   frontContent,
   backContent,
+  textColor,
   variant = "default",
   width = 100,
   height = 150,
@@ -30,23 +22,71 @@ export default function FlipCard({
   const [flipped, setFlipped] = useState(false);
   const containerRef = useRef(null);
 
-  // Farbschemata definieren
   const colorSchemes = {
-    default: { borderColor: "#29a9ff", frontBg: "#1e1e1e", backBg: "#000" },
-    fire: { borderColor: "#ff4500", frontBg: "#330000", backBg: "#220000" },
-    ice: { borderColor: "#00d4ff", frontBg: "#001f33", backBg: "#000f1a" },
-    water: { borderColor: "#1e90ff", frontBg: "#001e3c", backBg: "#001025" },
-    thunder: { borderColor: "#ffd700", frontBg: "#1a1a2e", backBg: "#0f0f1b" },
-    shadow: { borderColor: "#5d3fd3", frontBg: "#0b0b0b", backBg: "#050505" },
-    nature: { borderColor: "#228B22", frontBg: "#1b3b1b", backBg: "#0f1f0f" },
+    default: {
+      borderColor: "#29a9ff",
+      frontBg: "#1e1e1e",
+      backBg: "#000",
+      textColor: "#ffffff",
+    },
+    fire: {
+      borderColor: "#ff4500",
+      frontBg: "#330000",
+      backBg: "#220000",
+      textColor: "#ffcccc",
+    },
+    ice: {
+      borderColor: "#00d4ff",
+      frontBg: "#001f33",
+      backBg: "#000f1a",
+      textColor: "#ccf2ff",
+    },
+    water: {
+      borderColor: "#1e90ff",
+      frontBg: "#001e3c",
+      backBg: "#001025",
+      textColor: "#b3d9ff",
+    },
+    thunder: {
+      borderColor: "#ffd700",
+      frontBg: "#1a1a2e",
+      backBg: "#0f0f1b",
+      textColor: "#fff176",
+    },
+    shadow: {
+      borderColor: "#5d3fd3",
+      frontBg: "#0b0b0b",
+      backBg: "#050505",
+      textColor: "#e0e0e0",
+    },
+    nature: {
+      borderColor: "#228B22",
+      frontBg: "#1b3b1b",
+      backBg: "#0f1f0f",
+      textColor: "#b2fba5",
+    },
+    divine: {
+      borderColor: "#fff59d",
+      frontBg: "#fffde7",
+      backBg: "#fff9c4",
+      textColor: "#333333",
+    },
+    demonic: {
+      borderColor: "#8b0000",
+      frontBg: "#2b0000",
+      backBg: "#3b0000",
+      textColor: "#ffcccc",
+    },
   };
-  const scheme = colorSchemes[variant] || colorSchemes.default;
 
-  // Interpolationen für Rotation
+  const scheme = colorSchemes[variant] || colorSchemes.default;
+  const effectiveTextColor = textColor || scheme.textColor;
+
   const frontInterpolate = animatedValue.interpolate({
     inputRange: [0, 180],
     outputRange: ["0deg", "180deg"],
   });
+
   const backInterpolate = animatedValue.interpolate({
     inputRange: [0, 180],
     outputRange: ["180deg", "360deg"],
@@ -90,7 +130,11 @@ export default function FlipCard({
             },
           ]}
         >
-          {frontContent}
+          {frontContent || (
+            <Text style={[styles.text, { color: effectiveTextColor }]}>
+              {variant}
+            </Text>
+          )}
         </Animated.View>
 
         <Animated.View
@@ -105,7 +149,11 @@ export default function FlipCard({
             },
           ]}
         >
-          {backContent}
+          {backContent || (
+            <Text style={[styles.text, { color: effectiveTextColor }]}>
+              {variant}
+            </Text>
+          )}
         </Animated.View>
       </View>
     </TouchableWithoutFeedback>
@@ -116,13 +164,14 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     justifyContent: "center",
-    margin: 8, // zusätzlicher Außenabstand
+    margin: 8,
   },
   card: {
     position: "absolute",
     backfaceVisibility: "hidden",
     justifyContent: "center",
-    borderRadius: 12, // größere Ecken
+    alignItems: "center",
+    borderRadius: 12,
     borderWidth: 2,
     ...Platform.select({
       ios: {
@@ -135,5 +184,10 @@ const styles = StyleSheet.create({
         elevation: 4,
       },
     }),
+  },
+  text: {
+    fontSize: 16,
+    fontWeight: "bold",
+    textTransform: "capitalize",
   },
 });
