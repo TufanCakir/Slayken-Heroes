@@ -3,12 +3,12 @@ import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import * as Updates from "expo-updates";
 
 const UpdateChecker = ({ showStatus = true, onComplete = null }) => {
-  const [status, setStatus] = useState('checking');
+  const [status, setStatus] = useState("checking");
 
   const checkForUpdates = useCallback(async () => {
     try {
       if (Updates.isExpoGo) {
-        setStatus('current');
+        setStatus("current");
         onComplete?.(false);
         return;
       }
@@ -17,15 +17,15 @@ const UpdateChecker = ({ showStatus = true, onComplete = null }) => {
 
       if (update.isAvailable) {
         await Updates.fetchUpdateAsync();
-        setStatus('updated');
+        setStatus("updated");
         setTimeout(Updates.reloadAsync, 1200);
       } else {
-        setStatus('current');
+        setStatus("current");
         onComplete?.(false);
       }
     } catch (e) {
       console.warn("❌ Fehler bei Update-Check:", e);
-      setStatus('error');
+      setStatus("error");
       onComplete?.(false);
     }
   }, [onComplete]);
@@ -37,18 +37,22 @@ const UpdateChecker = ({ showStatus = true, onComplete = null }) => {
   if (!showStatus) return null;
 
   const statusMessages = {
-    checking: { icon: '🔍', text: 'Suche nach Updates...' },
-    updated: { icon: '🔄', text: 'Update geladen – Neustart...' },
-    error: { icon: '⚠️', text: 'Fehler beim Update' },
-    current: { icon: '✅', text: 'App ist aktuell' },
+    checking: { icon: "🔍", text: "Suche nach Updates..." },
+    updated: { icon: "🔄", text: "Update geladen – Neustart..." },
+    error: { icon: "⚠️", text: "Fehler beim Update" },
+    current: { icon: "✅", text: "App ist aktuell" },
   };
 
   const { icon, text } = statusMessages[status];
 
   return (
     <View style={styles.container}>
-      {status === 'checking' && <ActivityIndicator size="small" color="#4caf50" />}
-      <Text style={styles.text}>{icon} {text}</Text>
+      {status === "checking" && (
+        <ActivityIndicator size="small" color="#4caf50" />
+      )}
+      <Text style={styles.text}>
+        {icon} {text}
+      </Text>
       <Text style={styles.version}>
         runtimeVersion: {Updates.runtimeVersion}
       </Text>

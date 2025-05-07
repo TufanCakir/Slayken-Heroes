@@ -13,7 +13,6 @@ import {
   View,
   Platform,
   Animated,
-  TouchableOpacity,
 } from "react-native";
 import Constants from "expo-constants";
 import * as FileSystem from "expo-file-system";
@@ -21,16 +20,14 @@ import * as Updates from "expo-updates";
 import { Image as ExpoImage, ImageBackground } from "expo-image";
 import { useNavigation } from "@react-navigation/native";
 import enemyImages from "../data/enemies.json";
-
-const BACKGROUND_IMAGE_URL =
-  "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/images/images.png";
-
-// Statisch importierte JSON-Daten
 import backgrounds from "../data/backgrounds.json";
 import mapData from "../data/mapData.json";
 import songs from "../data/songs.json";
 import enemies from "../data/enemies.json";
 import attackZone from "../data/attackZone.json";
+
+const BACKGROUND_IMAGE_URL =
+  "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/images/images.png";
 
 const dataModules = { backgrounds, mapData, songs, enemies, attackZone };
 
@@ -98,15 +95,11 @@ export default function StartScreen() {
       console.warn("Update-Check fehlgeschlagen:", e);
     }
 
-    // Wenn kein Update oder Fehler → direkt starten
     setLoading(true);
     const moduleKeys = Object.keys(dataModules);
     try {
       for (let i = 0; i < moduleKeys.length; i++) {
-        const key = moduleKeys[i];
         await animateProgress(progress, (i + 1) / moduleKeys.length);
-        const data = dataModules[key];
-        console.log(`Loaded module: ${key}`, data);
       }
       navigation.replace("HomeScreen");
     } catch (error) {
@@ -121,7 +114,7 @@ export default function StartScreen() {
       Updates.reloadAsync();
     } catch (e) {
       console.warn("Fehler beim Update:", e);
-      setShowUpdatePrompt(false); // zurück zur Startanzeige
+      setShowUpdatePrompt(false);
     }
   };
 
@@ -137,40 +130,6 @@ export default function StartScreen() {
     outputRange: ["0%", "100%"],
   });
 
-  // Update-Prompt anzeigen
-  if (showUpdatePrompt) {
-    return (
-      <View style={styles.background}>
-        <ImageBackground
-          source={{ uri: cachedBackground || BACKGROUND_IMAGE_URL }}
-          style={styles.background}
-          contentFit="cover"
-          transition={1000}
-        >
-          <SafeAreaView style={styles.container}>
-            <View style={styles.centerTextWrapper}>
-              <Text style={styles.startText}>🔄 Update verfügbar</Text>
-              <Text
-                style={[styles.startText, { fontSize: 16, marginBottom: 20 }]}
-              >
-                Möchtest du es jetzt herunterladen?
-              </Text>
-              <Text style={styles.button} onPress={startUpdate}>
-                📥 Jetzt herunterladen
-              </Text>
-              <Text
-                style={[styles.button, { backgroundColor: "#666" }]}
-                onPress={() => setShowUpdatePrompt(false)}
-              >
-                ❌ Später
-              </Text>
-            </View>
-          </SafeAreaView>
-        </ImageBackground>
-      </View>
-    );
-  }
-
   return (
     <TouchableWithoutFeedback onPress={handlePress}>
       <View style={styles.background}>
@@ -181,26 +140,48 @@ export default function StartScreen() {
           transition={1000}
         >
           <SafeAreaView style={styles.container}>
-            {cachedEnemyImage && (
-              <ExpoImage
-                source={{ uri: cachedEnemyImage }}
-                style={styles.enemyImage}
-                contentFit="contain"
-                transition={500}
-              />
-            )}
-
-            <View style={styles.centerTextWrapper}>
-              {loading ? (
-                <View style={styles.progressBarWrapper}>
-                  <Animated.View
-                    style={[styles.progressBarFill, { width: progressWidth }]}
+            {showUpdatePrompt ? (
+              <View style={styles.centerTextWrapper}>
+                <Text style={styles.startText}>🔄 Update verfügbar</Text>
+                <Text style={styles.promptText}>Jetzt herunterladen?</Text>
+                <Text style={styles.button} onPress={startUpdate}>
+                  📥 Ja, Update jetzt
+                </Text>
+                <Text
+                  style={[styles.button, { backgroundColor: "#666" }]}
+                  onPress={() => setShowUpdatePrompt(false)}
+                >
+                  ❌ Später
+                </Text>
+              </View>
+            ) : (
+              <>
+                {cachedEnemyImage && (
+                  <ExpoImage
+                    source={{ uri: cachedEnemyImage }}
+                    style={styles.enemyImage}
+                    contentFit="contain"
+                    transition={500}
                   />
+                )}
+                <View style={styles.centerTextWrapper}>
+                  {loading ? (
+                    <View style={styles.progressBarWrapper}>
+                      <Animated.View
+                        style={[
+                          styles.progressBarFill,
+                          { width: progressWidth },
+                        ]}
+                      />
+                    </View>
+                  ) : (
+                    <Text style={styles.startText}>
+                      Berühren, um zu starten
+                    </Text>
+                  )}
                 </View>
-              ) : (
-                <Text style={styles.startText}>Berühren, um zu starten</Text>
-              )}
-            </View>
+              </>
+            )}
 
             <View style={styles.footer}>
               <ExpoImage
@@ -223,14 +204,11 @@ export default function StartScreen() {
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-  },
+  background: { flex: 1 },
   container: {
     flex: 1,
     paddingTop: Constants.statusBarHeight,
     justifyContent: "center",
-    position: "relative",
   },
   enemyImage: {
     position: "absolute",
@@ -248,9 +226,24 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#fff",
     textAlign: "center",
-    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  promptText: {
+    fontSize: 16,
+    color: "#fff",
+    marginBottom: 20,
+  },
+  button: {
     paddingVertical: 10,
-    borderRadius: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    backgroundColor: "#4caf50",
+    color: "#fff",
+    fontWeight: "bold",
+    textAlign: "center",
+    fontSize: 18,
+    marginVertical: 10,
+    overflow: "hidden",
   },
   progressBarWrapper: {
     width: "100%",
@@ -280,17 +273,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#aaa",
     marginTop: 4,
-  },
-  button: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    backgroundColor: "#4caf50",
-    color: "#fff",
-    fontWeight: "bold",
-    textAlign: "center",
-    fontSize: 18,
-    marginVertical: 10,
-    overflow: "hidden",
   },
 });
