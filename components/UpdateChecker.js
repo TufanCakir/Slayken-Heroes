@@ -1,71 +1,60 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import * as Updates from "expo-updates";
 
-export default function UpdateChecker({
-  showStatus = true,
-  onComplete = null,
-}) {
-  const [checking, setChecking] = useState(true);
-  const [updated, setUpdated] = useState(false);
-  const [error, setError] = useState(null);
+const UpdateChecker = ({ showStatus = true, onComplete = null }) => {
+  const [status, setStatus] = useState('checking');
 
-  useEffect(() => {
-    const checkForUpdates = async () => {
-      try {
-        if (Updates.isExpoGo) {
-          setChecking(false);
-          onComplete?.(false); // kein Update
-          return;
-        }
+  const checkForUpdates = useCallback(async () => {
+    try {
+      if (Updates.isExpoGo) {
+        setStatus('current');
+        onComplete?.(false);
+        return;
+      }
 
-        const update = await Updates.checkForUpdateAsync();
+      const update = await Updates.checkForUpdateAsync();
 
-        if (update.isAvailable) {
-          await Updates.fetchUpdateAsync();
-          setUpdated(true);
-
-          setTimeout(() => {
-            Updates.reloadAsync(); // App neustarten
-          }, 1200);
-        } else {
-          setChecking(false);
-          onComplete?.(false);
-        }
-      } catch (e) {
-        console.warn("❌ Fehler bei Update-Check:", e);
-        setError(e);
-        setChecking(false);
+      if (update.isAvailable) {
+        await Updates.fetchUpdateAsync();
+        setStatus('updated');
+        setTimeout(Updates.reloadAsync, 1200);
+      } else {
+        setStatus('current');
         onComplete?.(false);
       }
-    };
+    } catch (e) {
+      console.warn("❌ Fehler bei Update-Check:", e);
+      setStatus('error');
+      onComplete?.(false);
+    }
+  }, [onComplete]);
 
+  useEffect(() => {
     checkForUpdates();
-  }, []);
+  }, [checkForUpdates]);
 
   if (!showStatus) return null;
 
+  const statusMessages = {
+    checking: { icon: '🔍', text: 'Suche nach Updates...' },
+    updated: { icon: '🔄', text: 'Update geladen – Neustart...' },
+    error: { icon: '⚠️', text: 'Fehler beim Update' },
+    current: { icon: '✅', text: 'App ist aktuell' },
+  };
+
+  const { icon, text } = statusMessages[status];
+
   return (
     <View style={styles.container}>
-      {checking && (
-        <>
-          <ActivityIndicator size="small" color="#4caf50" />
-          <Text style={styles.text}>Suche nach Updates...</Text>
-        </>
-      )}
-      {updated && (
-        <Text style={styles.text}>🔄 Update geladen – Neustart...</Text>
-      )}
-      {error && <Text style={styles.text}>⚠️ Fehler beim Update</Text>}
-      {!checking && !updated && !error && (
-        <Text style={styles.text}>✅ App ist aktuell</Text>
-      )}
+      {status === 'checking' && <ActivityIndicator size="small" color="#4caf50" />}
+      <Text style={styles.text}>{icon} {text}</Text>
       <Text style={styles.version}>
         runtimeVersion: {Updates.runtimeVersion}
       </Text>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -90,3 +79,5 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 });
+
+export default UpdateChecker;

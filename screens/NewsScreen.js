@@ -41,10 +41,10 @@ const newsData = [
   },
   {
     id: "4",
-    title: "Neues Event gestartet Boss Rush!",
-    description: "Kämpfe gegen Mächtige Bosse!",
+    title: "Neues Event gestartet Dinoken!",
+    description: "Kämpfe gegen den Mächtigen Dinoken!",
     image:
-      "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/animals/leoken.png",
+      "https://raw.githubusercontent.com/TufanCakir/slayken-assets/main/animals/dinoken.png",
   },
 ];
 

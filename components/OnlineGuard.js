@@ -1,63 +1,79 @@
-import React from "react";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import React, { useMemo } from "react";
+import {
+  SafeAreaView,
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  ViewStyle,
+} from "react-native";
 import PropTypes from "prop-types";
 import useOnlineStatus from "../hooks/useOnlineStatus";
 
-/**
- * OnlineGuard component: shows children only when online, otherwise displays a message.
- * @param {object} props
- * @param {React.ReactNode} props.children - Content to render when online
- * @param {string} [props.message] - Optional custom offline message
- * @param {object} [props.style] - Optional styles to apply to the container
- */
-export default function OnlineGuard({ children, message, style }) {
+function OnlineGuard({
+  children,
+  message,
+  containerStyle,
+  spinnerSize,
+  spinnerColor,
+}) {
   const isOnline = useOnlineStatus();
 
-  // While checking status, show a loader
-  if (isOnline === null) {
-    return (
-      <View style={[styles.centered, style]}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
+  const combinedStyle = useMemo(
+    () => [styles.centered, containerStyle],
+    [containerStyle]
+  );
 
-  // Offline state
-  if (!isOnline) {
-    return (
-      <View
-        style={[styles.centered, style]}
-        accessible
-        accessibilityRole="alert"
-      >
-        <Text style={styles.text} accessibilityLiveRegion="polite">
-          {message || "Bitte aktiviere deine Internetverbindung"}
-        </Text>
-      </View>
-    );
-  }
+  const renderLoading = () => (
+    <SafeAreaView style={combinedStyle}>
+      <ActivityIndicator
+        size={spinnerSize}
+        color={spinnerColor}
+        accessibilityLabel="Lade Verbindungsstatus"
+      />
+    </SafeAreaView>
+  );
 
-  // Online state: render children
+  const renderOffline = () => (
+    <SafeAreaView style={combinedStyle} accessible accessibilityRole="alert">
+      <Text style={styles.text} accessibilityLiveRegion="polite">
+        {message}
+      </Text>
+    </SafeAreaView>
+  );
+
+  if (isOnline === null) return renderLoading();
+  if (!isOnline) return renderOffline();
+
   return <>{children}</>;
 }
 
 OnlineGuard.propTypes = {
   children: PropTypes.node.isRequired,
   message: PropTypes.string,
-  style: PropTypes.object,
+  containerStyle: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
+  spinnerSize: PropTypes.oneOfType([
+    PropTypes.oneOf(["small", "large"]),
+    PropTypes.number,
+  ]),
+  spinnerColor: PropTypes.string,
 };
 
 OnlineGuard.defaultProps = {
-  message: null,
-  style: {},
+  message: "Bitte aktiviere deine Internetverbindung.",
+  containerStyle: {},
+  spinnerSize: "large",
+  spinnerColor: "#ffffff",
 };
+
+export default OnlineGuard;
 
 const styles = StyleSheet.create({
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#000000",
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
     padding: 16,
   },
   text: {

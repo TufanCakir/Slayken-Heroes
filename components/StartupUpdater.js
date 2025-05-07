@@ -3,27 +3,29 @@ import { View } from "react-native";
 import UpdateChecker from "./UpdateChecker";
 import DownloaderScreen from "../screens/DownloaderScreen";
 
-export default function StartupUpdater({ onFinish }) {
-  const [step, setStep] = useState("checkingUpdate");
+const STEP = {
+  CHECKING_UPDATE: "checkingUpdate",
+  DOWNLOADING_ASSETS: "downloadingAssets",
+};
 
-  const handleUpdateComplete = () => {
-    setStep("downloadingAssets");
+export default function StartupUpdater({ onFinish }) {
+  const [step, setStep] = useState(STEP.CHECKING_UPDATE);
+
+  const onUpdateCheckComplete = () => {
+    setStep(STEP.DOWNLOADING_ASSETS);
   };
 
-  const handleAssetsDownloaded = () => {
-    if (typeof onFinish === "function") {
-      onFinish(); // signalisiere App.js, dass Startup abgeschlossen ist
-    }
+  const onAssetsDownloadComplete = () => {
+    onFinish?.(); // Kürzere, moderne Schreibweise für: if (typeof onFinish === "function")
   };
 
   return (
     <View style={{ flex: 1 }}>
-      {step === "checkingUpdate" && (
-        <UpdateChecker showStatus={true} onComplete={handleUpdateComplete} />
+      {step === STEP.CHECKING_UPDATE && (
+        <UpdateChecker showStatus onComplete={onUpdateCheckComplete} />
       )}
-
-      {step === "downloadingAssets" && (
-        <DownloaderScreen onComplete={handleAssetsDownloaded} />
+      {step === STEP.DOWNLOADING_ASSETS && (
+        <DownloaderScreen onComplete={onAssetsDownloadComplete} />
       )}
     </View>
   );

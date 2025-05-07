@@ -26,9 +26,6 @@ const downloadAndCacheImage = async (url) => {
 
     if (!info.exists) {
       await FileSystem.downloadAsync(url, localPath);
-      console.log("📥 Bild gespeichert:", filename);
-    } else {
-      console.log("✅ Bereits lokal:", filename);
     }
 
     return localPath;
@@ -40,7 +37,7 @@ const downloadAndCacheImage = async (url) => {
 
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
-  const [appStep, setAppStep] = useState("startup"); // "startup" | "ready"
+  const [appStep, setAppStep] = useState("startup");
   const [cachedImages, setCachedImages] = useState({});
 
   useEffect(() => {
@@ -49,12 +46,7 @@ export default function App() {
         const criticalAssets = [
           import("./data/mapData.json"),
           import("./data/songs.json"),
-          import("./data/enemies.json"),
-          import("./data/attackZone.json"),
-          Asset.loadAsync([
-            require("./assets/logoT.png"),
-            require("./assets/splash.png"),
-          ]),
+          Asset.loadAsync([require("./assets/logoT.png")]),
         ];
 
         const enemyImageUrls = Object.values(enemyImages);
@@ -62,22 +54,16 @@ export default function App() {
           .map((bg) => bg.image)
           .filter((url) => typeof url === "string");
 
-        const criticalImageUrls = [...enemyImageUrls, ...backgroundUrls].slice(
-          0,
-          10
-        );
-        const nonCriticalImageUrls = [
-          ...enemyImageUrls,
-          ...backgroundUrls,
-        ].slice(10);
+        const criticalImageUrls = [...enemyImageUrls, ...backgroundUrls].slice(0, 5);
 
-        const criticalImageLoading = Promise.all(
-          criticalImageUrls.map(downloadAndCacheImage)
-        );
+        await Promise.all([
+          ...criticalAssets,
+          ...criticalImageUrls.map(downloadAndCacheImage),
+        ]);
 
-        await Promise.all([...criticalAssets, criticalImageLoading]);
-
+        // Load non-critical assets in the background
         setTimeout(() => {
+          const nonCriticalImageUrls = [...enemyImageUrls, ...backgroundUrls].slice(5);
           Promise.all(nonCriticalImageUrls.map(downloadAndCacheImage)).then(
             (cachedPaths) => {
               setCachedImages((prev) => ({
@@ -105,7 +91,7 @@ export default function App() {
     }
   }, [appIsReady]);
 
-  const InnerApp = () => {
+  const InnerApp = useCallback(() => {
     const { musicOn } = useGame();
     useMusicManager(musicOn);
 
@@ -126,7 +112,7 @@ export default function App() {
     }
 
     return null;
-  };
+  }, [appStep]);
 
   if (!appIsReady) {
     return (
@@ -140,9 +126,7 @@ export default function App() {
     <SafeAreaProvider>
       <SafeAreaView style={styles.container} onLayout={onLayoutRootView}>
         <GameProvider cachedImages={cachedImages}>
-          <Suspense
-            fallback={<ActivityIndicator size="large" color="#003b5a" />}
-          >
+          <Suspense fallback={<ActivityIndicator size="large" color="#003b5a" />}>
             <InnerApp />
           </Suspense>
         </GameProvider>

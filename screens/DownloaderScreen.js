@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, Button, StyleSheet, ScrollView } from "react-native";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Text, Button, StyleSheet, ScrollView } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as Progress from "react-native-progress";
 
@@ -10,13 +10,16 @@ import backgrounds from "../data/backgrounds.json";
 import attackZone from "../data/attackZone.json";
 
 const formatBytes = (bytes) => {
-  if (bytes >= 1_000_000_000) return (bytes / 1_000_000_000).toFixed(2) + " GB";
-  if (bytes >= 1_000_000) return (bytes / 1_000_000).toFixed(1) + " MB";
-  if (bytes >= 1_000) return (bytes / 1_000).toFixed(0) + " KB";
-  return bytes + " B";
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let i = 0;
+  while (bytes >= 1000 && i < units.length - 1) {
+    bytes /= 1000;
+    i++;
+  }
+  return `${bytes.toFixed(i > 0 ? 1 : 0)} ${units[i]}`;
 };
 
-export default function DownloaderScreen(props) {
+export default function DownloaderScreen({ onComplete }) {
   const [progress, setProgress] = useState(0);
   const [downloading, setDownloading] = useState(false);
   const [finished, setFinished] = useState(false);
@@ -24,27 +27,19 @@ export default function DownloaderScreen(props) {
   const [totalSize, setTotalSize] = useState(0);
   const [fileCount, setFileCount] = useState(0);
 
-  const collectAssetUrls = () => {
-    const urls = [];
+  const collectAssetUrls = useCallback(() => {
+    const urls = [
+      ...songs.songs.map(song => song.url),
+      ...mapData.filter(island => island.image).map(island => island.image),
+      ...Object.values(enemies).filter(value => typeof value === "string"),
+      ...(backgrounds.image ? [backgrounds.image] : [])
+    ];
 
-    songs.songs.forEach((song) => urls.push(song.url));
-    mapData.forEach((island) => {
-      if (island.image) urls.push(island.image);
-    });
-    Object.values(enemies).forEach((value) => {
-      if (typeof value === "string") urls.push(value);
-    });
-    if (backgrounds.image) urls.push(backgrounds.image);
-
-    if (
-      attackZone &&
-      attackZone.fights &&
-      typeof attackZone.fights === "object"
-    ) {
-      Object.values(attackZone.fights).forEach((fight) => {
+    if (attackZone?.fights && typeof attackZone.fights === "object") {
+      Object.values(attackZone.fights).forEach(fight => {
         if (fight?.background) urls.push(fight.background);
         if (Array.isArray(fight.enemies)) {
-          fight.enemies.forEach((enemy) => {
+          fight.enemies.forEach(enemy => {
             if (enemy?.image) urls.push(enemy.image);
           });
         }
@@ -52,35 +47,34 @@ export default function DownloaderScreen(props) {
     }
 
     return urls;
-  };
+  }, []);
 
-  // Prüfen ob alle Assets bereits lokal existieren
+  const urls = useMemo(() => collectAssetUrls(), [collectAssetUrls]);
+
   useEffect(() => {
     const checkIfAllCached = async () => {
-      const urls = collectAssetUrls();
       setFileCount(urls.length);
 
       const allFilesExist = await Promise.all(
         urls.map(async (url) => {
           const filename = url.split("/").pop();
-          const localUri = FileSystem.documentDirectory + filename;
-          const info = await FileSystem.getInfoAsync(localUri);
-          return info.exists;
+          const localUri = `${FileSystem.documentDirectory}${filename}`;
+          const { exists } = await FileSystem.getInfoAsync(localUri);
+          return exists;
         })
       );
 
-      if (allFilesExist.every((x) => x)) {
+      if (allFilesExist.every(Boolean)) {
         console.log("✅ Alle Assets bereits vorhanden.");
         setFinished(true);
-        props.onComplete?.(); // optionaler Callback an StartupUpdater
+        onComplete?.();
       }
     };
 
     checkIfAllCached();
-  }, []);
+  }, [urls, onComplete]);
 
-  const downloadAll = async () => {
-    const urls = collectAssetUrls();
+  const downloadAll = useCallback(async () => {
     setFileCount(urls.length);
     setDownloading(true);
 
@@ -91,7 +85,7 @@ export default function DownloaderScreen(props) {
       try {
         const response = await fetch(url, { method: "HEAD" });
         const size = response.headers.get("content-length");
-        return size ? parseInt(size) : 0;
+        return size ? parseInt(size, 10) : 0;
       } catch (e) {
         console.warn("❌ HEAD fehlgeschlagen für:", url);
         return 0;
@@ -106,15 +100,15 @@ export default function DownloaderScreen(props) {
       const url = urls[i];
       const size = sizes[i];
       const filename = url.split("/").pop();
-      const localUri = FileSystem.documentDirectory + filename;
+      const localUri = `${FileSystem.documentDirectory}${filename}`;
 
-      const fileInfo = await FileSystem.getInfoAsync(localUri);
-      if (!fileInfo.exists) {
+      const { exists } = await FileSystem.getInfoAsync(localUri);
+      if (!exists) {
         try {
           await FileSystem.downloadAsync(url, localUri);
           downloadedBytes += size;
         } catch (error) {
-          console.warn("Fehler beim Download:", url);
+          console.warn("Fehler beim Download:", url, error);
         }
       } else {
         downloadedBytes += size;
@@ -127,10 +121,8 @@ export default function DownloaderScreen(props) {
 
     setDownloading(false);
     setFinished(true);
-
-    // Callback für StartupUpdater
-    props.onComplete?.();
-  };
+    onComplete?.();
+  }, [urls, onComplete]);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
