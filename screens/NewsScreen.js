@@ -1,5 +1,4 @@
-// screens/NewsScreen.js
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -11,9 +10,11 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { Image } from "expo-image";
 import { ImageBackground } from "expo-image";
+
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import attackZone from "../data/attackZone.json";
+import { getCachedImage } from "../utils/ImageCache";
 
 const { width, height } = Dimensions.get("window");
 
@@ -50,6 +51,18 @@ const newsData = [
 
 export default function NewsScreen() {
   const navigation = useNavigation();
+  const [cachedNewsImages, setCachedNewsImages] = useState({});
+
+  useEffect(() => {
+    const loadImages = async () => {
+      const result = {};
+      for (const news of newsData) {
+        result[news.id] = await getCachedImage(news.image);
+      }
+      setCachedNewsImages(result);
+    };
+    loadImages();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -62,12 +75,11 @@ export default function NewsScreen() {
               style={styles.newsCard}
               activeOpacity={0.8}
               onPress={() => {
-                // später: Detailscreen anzeigen
                 console.log(`News ${news.id} angeklickt`);
               }}
             >
               <Image
-                source={news.image}
+                source={cachedNewsImages[news.id] || news.image}
                 style={styles.newsImage}
                 contentFit="contain"
               />
